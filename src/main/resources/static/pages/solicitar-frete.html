@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hermes – Solicitar Frete</title>
+<link rel="stylesheet" href="../css/styles.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+.page-wrap { max-width: 760px; margin: 0 auto; padding: 7rem 1.5rem 4rem; }
+.page-title { font-size: 2rem; font-weight: 800; color: var(--primary); margin-bottom: 0.4rem; }
+.page-sub { font-family: 'DM Sans', sans-serif; color: var(--gray); font-size: 1rem; margin-bottom: 2.5rem; }
+.frete-form { background: #fff; border-radius: var(--border-radius-xl); box-shadow: var(--shadow-xl); padding: 2rem; }
+.form-section { margin-bottom: 2rem; }
+.form-section h3 { font-size: 1rem; font-weight: 700; color: var(--primary); margin-bottom: 1.2rem; display: flex; align-items: center; gap: 0.5rem; padding-bottom: 0.6rem; border-bottom: 2px solid rgba(4,85,58,0.1); }
+.tabs { display: flex; gap: 0.5rem; margin-bottom: 2rem; background: var(--gray-light); padding: 0.35rem; border-radius: 12px; }
+.tab-btn {
+    flex: 1; padding: 0.65rem 1rem; border: none; border-radius: 9px;
+    font-family: 'Space Grotesk', sans-serif; font-size: 0.9rem; font-weight: 600;
+    cursor: pointer; color: var(--gray); background: transparent; transition: var(--transition);
+    display: flex; align-items: center; justify-content: center; gap: 0.4rem;
+}
+.tab-btn.active { background: #fff; color: var(--primary); box-shadow: var(--shadow); }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+.form-info {
+    display: flex; gap: 0.75rem; padding: 1rem;
+    background: rgba(4,85,58,0.05); border-radius: 12px;
+    border-left: 3px solid var(--accent); margin-bottom: 1.5rem;
+    font-size: 0.88rem; font-family: 'DM Sans', sans-serif; color: var(--primary);
+}
+.form-info i { color: var(--accent); margin-top: 2px; flex-shrink: 0; }
+.transportadores-list { display: flex; flex-direction: column; gap: 0.75rem; margin-top: 0.5rem; }
+.transportador-item {
+    padding: 1rem; border: 2px solid #e5e7eb; border-radius: 14px;
+    cursor: pointer; transition: var(--transition); display: flex; align-items: center; gap: 1rem;
+    background: #fff;
+}
+.transportador-item:hover, .transportador-item.selected { border-color: var(--primary); background: rgba(4,85,58,0.04); }
+.transportador-item input[type=radio] { accent-color: var(--primary); width: 18px; height: 18px; flex-shrink: 0; }
+.transportador-info { flex: 1; }
+.transportador-nome { font-weight: 700; color: var(--primary); font-size: 0.95rem; }
+.transportador-rating { display: flex; align-items: center; gap: 0.3rem; font-size: 0.82rem; color: var(--gray); margin-top: 0.2rem; }
+.transportador-rating .stars { color: #f59e0b; }
+#alertBox { margin-bottom: 1rem; }
+</style>
+</head>
+<body>
+<div id="navbar"></div>
+
+<div class="page-wrap">
+  <h1 class="page-title animate-fade-in">Solicitar Frete</h1>
+  <p class="page-sub animate-fade-in">Preencha os dados para enviar sua solicitação.</p>
+
+  <div id="alertBox"></div>
+
+  <!-- Tabs imediato / agendado -->
+  <div class="tabs animate-fade-in">
+    <button class="tab-btn active" onclick="setTab('imediato')" id="tab-imediato">
+      <i class="fas fa-bolt"></i> Frete Imediato
+    </button>
+    <button class="tab-btn" onclick="setTab('agendado')" id="tab-agendado">
+      <i class="fas fa-calendar-alt"></i> Frete Agendado
+    </button>
+  </div>
+
+  <form class="frete-form animate-fade-in" id="freteForm" onsubmit="solicitarFrete(event)">
+
+    <!-- campos comuns -->
+    <div class="form-section">
+      <h3><i class="fas fa-map-marker-alt"></i> Origem e Destino</h3>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Endereço de Origem *</label>
+          <input type="text" id="origem" placeholder="Ex: Rua das Flores, 100 – São Paulo, SP" required>
+        </div>
+        <div class="form-group">
+          <label>Endereço de Destino *</label>
+          <input type="text" id="destino" placeholder="Ex: Av. Brasil, 500 – Rio de Janeiro, RJ" required>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h3><i class="fas fa-box"></i> Informações da Carga</h3>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Descrição da Carga *</label>
+          <input type="text" id="descricaoCarga" placeholder="Ex: Eletrodomésticos, caixas frágeis" required>
+        </div>
+        <div class="form-group">
+          <label>Valor do Frete (R$) *</label>
+          <input type="number" id="valor" placeholder="0,00" min="0.01" step="0.01" required>
+        </div>
+      </div>
+    </div>
+
+    <!-- painel imediato -->
+    <div class="tab-panel active" id="panel-imediato">
+      <div class="form-info">
+        <i class="fas fa-info-circle"></i>
+        <span>No frete imediato, qualquer transportador disponível poderá aceitar sua solicitação.</span>
+      </div>
+    </div>
+
+    <!-- painel agendado -->
+    <div class="tab-panel" id="panel-agendado">
+      <div class="form-section">
+        <h3><i class="fas fa-clock"></i> Agendamento</h3>
+        <div class="form-group">
+          <label>Data e Hora de Início *</label>
+          <input type="datetime-local" id="dataHoraInicio">
+        </div>
+      </div>
+      <div class="form-section">
+        <h3><i class="fas fa-truck"></i> Escolha o Transportador</h3>
+        <div id="transportadoresList" class="transportadores-list">
+          <p style="color:var(--gray);font-family:'DM Sans',sans-serif;font-size:0.9rem;">Carregando transportadores...</p>
+        </div>
+      </div>
+      <div class="form-info">
+        <i class="fas fa-info-circle"></i>
+        <span>O transportador selecionado receberá sua solicitação e deverá confirmar o agendamento.</span>
+      </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary btn-large" id="submitBtn" style="width:100%;justify-content:center;border-radius:16px;">
+      <i class="fas fa-paper-plane"></i>
+      <span id="submitBtnText">Solicitar Frete</span>
+    </button>
+  </form>
+</div>
+
+<div id="footer"></div>
+<script src="../js/app.js"></script>
+<script>
+let tipoAtual = 'imediato';
+let transportadorSelecionado = null;
+
+// Redireciona se não logado ou não for cliente
+window.addEventListener('DOMContentLoaded', () => {
+    if (!Auth.isLoggedIn()) { location.href = 'login.html'; return; }
+    if (Auth.getRole() !== 'CLIENTE') { location.href = 'fretes-disponiveis.html'; return; }
+    buildNavbar();
+    buildFooter();
+    carregarTransportadores();
+});
+
+function setTab(tipo) {
+    tipoAtual = tipo;
+    document.getElementById('tab-imediato').classList.toggle('active', tipo === 'imediato');
+    document.getElementById('tab-agendado').classList.toggle('active', tipo === 'agendado');
+    document.getElementById('panel-imediato').classList.toggle('active', tipo === 'imediato');
+    document.getElementById('panel-agendado').classList.toggle('active', tipo === 'agendado');
+
+    document.getElementById('dataHoraInicio').required = tipo === 'agendado';
+}
+
+async function carregarTransportadores() {
+    const container = document.getElementById('transportadoresList');
+    try {
+        const lista = await apiFetch('/transportadores');
+        if (!lista.length) { container.innerHTML = '<p style="color:var(--gray)">Nenhum transportador disponível.</p>'; return; }
+        container.innerHTML = lista.map(t => `
+            <label class="transportador-item" onclick="selecionarTransportador(${t.id}, this)">
+                <input type="radio" name="transportador" value="${t.id}">
+                <div class="transportador-info">
+                    <div class="transportador-nome">${t.nome}</div>
+                    <div class="transportador-rating">
+                        <span class="stars">${'★'.repeat(Math.round(t.avaliacaoMedia||0))}${'☆'.repeat(5-Math.round(t.avaliacaoMedia||0))}</span>
+                        ${t.avaliacaoMedia ? t.avaliacaoMedia.toFixed(1) + ' · ' + t.totalAvaliacoes + ' avaliações' : 'Sem avaliações'}
+                    </div>
+                </div>
+                <span style="font-size:0.8rem;color:var(--gray)">${t.email}</span>
+            </label>`).join('');
+    } catch (err) {
+        container.innerHTML = `<p style="color:var(--error)">Erro ao carregar transportadores.</p>`;
+    }
+}
+
+function selecionarTransportador(id, el) {
+    transportadorSelecionado = id;
+    document.querySelectorAll('.transportador-item').forEach(i => i.classList.remove('selected'));
+    el.classList.add('selected');
+}
+
+async function solicitarFrete(e) {
+    e.preventDefault();
+    const alertBox = document.getElementById('alertBox');
+    const btn      = document.getElementById('submitBtn');
+    const btnText  = document.getElementById('submitBtnText');
+
+    const origem       = document.getElementById('origem').value.trim();
+    const destino      = document.getElementById('destino').value.trim();
+    const descricao    = document.getElementById('descricaoCarga').value.trim();
+    const valor        = parseFloat(document.getElementById('valor').value);
+
+    if (tipoAtual === 'agendado' && !transportadorSelecionado)
+        return showAlert(alertBox, 'Selecione um transportador para o frete agendado.', 'error');
+
+    btn.disabled = true;
+    btnText.textContent = 'Enviando...';
+
+    try {
+        const endpoint = tipoAtual === 'imediato' ? '/fretes/imediato' : '/fretes/agendado';
+        const body = { origem, destino, descricaoCarga: descricao, valor };
+
+        if (tipoAtual === 'agendado') {
+            body.transportadorId = transportadorSelecionado;
+            body.dataHoraInicio  = document.getElementById('dataHoraInicio').value;
+        }
+
+        await apiFetch(endpoint, { method: 'POST', body: JSON.stringify(body) });
+        showAlert(alertBox, 'Frete solicitado com sucesso!', 'success');
+        document.getElementById('freteForm').reset();
+        transportadorSelecionado = null;
+        setTimeout(() => location.href = 'fretes.html', 1500);
+
+    } catch (err) {
+        showAlert(alertBox, err.message, 'error');
+    } finally {
+        btn.disabled = false;
+        btnText.textContent = 'Solicitar Frete';
+    }
+}
+</script>
+</body>
+</html>

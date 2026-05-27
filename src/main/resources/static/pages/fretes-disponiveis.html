@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hermes – Fretes Disponíveis</title>
+<link rel="stylesheet" href="../css/styles.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+.page-wrap { max-width: 1100px; margin: 0 auto; padding: 7rem 1.5rem 4rem; }
+.page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem; }
+.page-title { font-size: 2rem; font-weight: 800; color: var(--primary); }
+.page-sub { font-family: 'DM Sans', sans-serif; color: var(--gray); font-size: 0.95rem; margin-top: 0.25rem; }
+.tabs { display: flex; gap: 0.5rem; margin-bottom: 2rem; background: var(--gray-light); padding: 0.35rem; border-radius: 12px; width: fit-content; }
+.tab-btn {
+    padding: 0.6rem 1.4rem; border: none; border-radius: 9px;
+    font-family: 'Space Grotesk', sans-serif; font-size: 0.9rem; font-weight: 600;
+    cursor: pointer; color: var(--gray); background: transparent; transition: var(--transition);
+    display: flex; align-items: center; gap: 0.4rem;
+}
+.tab-btn.active { background: #fff; color: var(--primary); box-shadow: var(--shadow); }
+.frete-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px,1fr)); gap: 1.25rem; }
+.frete-card {
+    background: #fff; border-radius: var(--border-radius-lg);
+    border: 1px solid rgba(4,85,58,0.07);
+    box-shadow: var(--shadow); padding: 1.5rem;
+    transition: var(--transition); display: flex; flex-direction: column; gap: 1rem;
+}
+.frete-card:hover { box-shadow: var(--shadow-xl); transform: translateY(-3px); }
+.frete-rota { font-size: 1rem; font-weight: 800; color: var(--primary); display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
+.frete-rota i { color: var(--accent); font-size: 0.85rem; }
+.frete-descricao { font-family: 'DM Sans', sans-serif; font-size: 0.88rem; color: var(--gray); }
+.frete-detalhe { display: flex; align-items: center; justify-content: space-between; padding-top: 0.9rem; border-top: 1px solid rgba(4,85,58,0.07); }
+.frete-valor { font-size: 1.3rem; font-weight: 800; color: var(--accent); }
+.frete-data { font-size: 0.78rem; font-family: 'DM Sans', sans-serif; color: var(--gray); }
+.frete-cliente { font-size: 0.82rem; color: var(--gray); display: flex; align-items: center; gap: 0.35rem; }
+.empty-state { text-align: center; padding: 5rem 2rem; color: var(--gray); grid-column: 1/-1; }
+.empty-state i { font-size: 3.5rem; color: #d1d5db; margin-bottom: 1rem; display: block; }
+.empty-state h3 { font-size: 1.2rem; font-weight: 700; color: var(--primary); margin-bottom: 0.5rem; }
+#loadingMsg { text-align: center; padding: 3rem; color: var(--gray); font-family: 'DM Sans', sans-serif; grid-column: 1/-1; }
+.refresh-btn { background: none; border: 1.5px solid rgba(4,85,58,0.2); border-radius: 10px; padding: 0.5rem 0.9rem; font-family: 'Space Grotesk', sans-serif; font-size: 0.85rem; font-weight: 600; color: var(--primary); cursor: pointer; display: flex; align-items: center; gap: 0.4rem; transition: var(--transition); }
+.refresh-btn:hover { background: rgba(4,85,58,0.06); }
+</style>
+</head>
+<body>
+<div id="navbar"></div>
+
+<div class="page-wrap">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title animate-fade-in">Fretes Disponíveis</h1>
+      <p class="page-sub animate-fade-in">Aceite fretes imediatos ou aguarde confirmações de agendamentos.</p>
+    </div>
+    <button class="refresh-btn" onclick="carregarTudo()"><i class="fas fa-sync-alt"></i> Atualizar</button>
+  </div>
+
+  <div id="alertBox"></div>
+
+  <div class="tabs animate-fade-in">
+    <button class="tab-btn active" id="tab-disponiveis" onclick="setTab('disponiveis')">
+      <i class="fas fa-bolt"></i> Disponíveis
+    </button>
+    <button class="tab-btn" id="tab-meus" onclick="setTab('meus')">
+      <i class="fas fa-truck"></i> Meus Fretes
+    </button>
+  </div>
+
+  <!-- Tab: disponíveis -->
+  <div id="panel-disponiveis">
+    <div class="frete-grid" id="disponivelGrid">
+      <div id="loadingMsg1" style="text-align:center;padding:3rem;color:var(--gray);grid-column:1/-1;">
+        <span class="spinner"></span> Carregando...
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab: meus fretes -->
+  <div id="panel-meus" style="display:none;">
+    <div class="frete-grid" id="meusGrid">
+      <div id="loadingMsg2" style="text-align:center;padding:3rem;color:var(--gray);grid-column:1/-1;">
+        <span class="spinner"></span> Carregando...
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="footer"></div>
+<script src="../js/app.js"></script>
+<script>
+window.addEventListener('DOMContentLoaded', () => {
+    if (!Auth.isLoggedIn()) { location.href = 'login.html'; return; }
+    if (Auth.getRole() !== 'TRANSPORTADOR') { location.href = 'solicitar-frete.html'; return; }
+    buildNavbar();
+    buildFooter();
+    carregarTudo();
+});
+
+function setTab(t) {
+    document.getElementById('tab-disponiveis').classList.toggle('active', t === 'disponiveis');
+    document.getElementById('tab-meus').classList.toggle('active', t === 'meus');
+    document.getElementById('panel-disponiveis').style.display = t === 'disponiveis' ? '' : 'none';
+    document.getElementById('panel-meus').style.display       = t === 'meus'         ? '' : 'none';
+}
+
+async function carregarTudo() {
+    await Promise.all([carregarDisponiveis(), carregarMeus()]);
+}
+
+async function carregarDisponiveis() {
+    const grid = document.getElementById('disponivelGrid');
+    grid.innerHTML = '<div style="text-align:center;padding:3rem;color:var(--gray);grid-column:1/-1;"><span class="spinner"></span> Carregando...</div>';
+    try {
+        const lista = await apiFetch('/fretes/disponiveis');
+        if (!lista.length) {
+            grid.innerHTML = `<div class="empty-state"><i class="fas fa-search"></i><h3>Nenhum frete disponível</h3><p>Novos fretes aparecerão aqui assim que forem solicitados.</p></div>`;
+            return;
+        }
+        grid.innerHTML = lista.map(f => cardDisponivel(f)).join('');
+    } catch (err) {
+        grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><i class="fas fa-exclamation-circle" style="color:var(--error)"></i><h3>Erro ao carregar</h3><p>${err.message}</p></div>`;
+    }
+}
+
+async function carregarMeus() {
+    const grid = document.getElementById('meusGrid');
+    grid.innerHTML = '<div style="text-align:center;padding:3rem;color:var(--gray);grid-column:1/-1;"><span class="spinner"></span> Carregando...</div>';
+    try {
+        const id   = Auth.getId();
+        const lista = await apiFetch(`/fretes/transportador/${id}`);
+        if (!lista.length) {
+            grid.innerHTML = `<div class="empty-state"><i class="fas fa-inbox"></i><h3>Nenhum frete ainda</h3><p>Aceite um frete disponível para começar.</p></div>`;
+            return;
+        }
+        grid.innerHTML = lista.map(f => cardMeu(f)).join('');
+    } catch (err) {
+        grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><i class="fas fa-exclamation-circle" style="color:var(--error)"></i><h3>Erro ao carregar</h3><p>${err.message}</p></div>`;
+    }
+}
+
+function cardDisponivel(f) {
+    return `
+        <div class="frete-card animate-fade-in">
+          <div>
+            <div class="frete-rota">
+              <i class="fas fa-map-marker-alt"></i> ${f.origem}
+              <i class="fas fa-long-arrow-alt-right"></i>
+              <i class="fas fa-flag-checkered"></i> ${f.destino}
+            </div>
+            <div class="frete-descricao" style="margin-top:0.4rem;">${f.descricaoCarga}</div>
+          </div>
+          <div class="frete-cliente"><i class="fas fa-user"></i> ${f.clienteNome || '—'}</div>
+          <div class="frete-detalhe">
+            <div>
+              <div class="frete-valor">${formatMoney(f.valor)}</div>
+              <div class="frete-data">${formatDate(f.dataSolicitacao)}</div>
+            </div>
+            ${statusBadge(f.status)}
+          </div>
+          <button class="btn btn-primary" style="width:100%;justify-content:center;border-radius:12px;" onclick="aceitarFrete(${f.id})">
+            <i class="fas fa-check"></i> Aceitar Frete
+          </button>
+        </div>`;
+}
+
+function cardMeu(f) {
+    let acao = '';
+    if (f.status === 'AGENDADO')
+        acao = `<button class="btn btn-primary btn-sm" onclick="executarAcao(${f.id},'confirmar')"><i class="fas fa-calendar-check"></i> Confirmar</button>
+                <button class="btn btn-danger btn-sm" onclick="executarAcao(${f.id},'rejeitar')"><i class="fas fa-times"></i> Rejeitar</button>`;
+    if (f.status === 'ACEITO' || f.status === 'EM_TRANSITO')
+        acao = `<button class="btn btn-accent btn-sm" onclick="executarAcao(${f.id},'finalizar')"><i class="fas fa-flag-checkered"></i> Finalizar</button>`;
+
+    return `
+        <div class="frete-card animate-fade-in">
+          <div>
+            <div class="frete-rota">
+              <i class="fas fa-map-marker-alt"></i> ${f.origem}
+              <i class="fas fa-long-arrow-alt-right"></i>
+              <i class="fas fa-flag-checkered"></i> ${f.destino}
+            </div>
+            <div class="frete-descricao" style="margin-top:0.4rem;">${f.descricaoCarga}</div>
+          </div>
+          <div class="frete-cliente"><i class="fas fa-user"></i> ${f.clienteNome || '—'}</div>
+          <div class="frete-detalhe">
+            <div>
+              <div class="frete-valor">${formatMoney(f.valor)}</div>
+              <div class="frete-data">${formatDate(f.dataSolicitacao)}</div>
+            </div>
+            ${statusBadge(f.status)}
+          </div>
+          ${acao ? `<div style="display:flex;gap:0.5rem;">${acao}</div>` : ''}
+        </div>`;
+}
+
+async function aceitarFrete(id) {
+    const alertBox = document.getElementById('alertBox');
+    try {
+        await apiFetch(`/fretes/${id}/aceitar`, { method: 'POST' });
+        showAlert(alertBox, 'Frete aceito com sucesso!', 'success');
+        await carregarTudo();
+    } catch (err) {
+        showAlert(alertBox, err.message, 'error');
+    }
+}
+
+async function executarAcao(id, tipo) {
+    const alertBox = document.getElementById('alertBox');
+    const msgs = { confirmar:'Agendamento confirmado!', rejeitar:'Frete rejeitado.', finalizar:'Frete finalizado!' };
+    try {
+        await apiFetch(`/fretes/${id}/${tipo}`, { method: 'POST' });
+        showAlert(alertBox, msgs[tipo] || 'Ação realizada.', 'success');
+        await carregarTudo();
+    } catch (err) {
+        showAlert(alertBox, err.message, 'error');
+    }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hermes – Meus Fretes</title>
+<link rel="stylesheet" href="../css/styles.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+.page-wrap { max-width: 1100px; margin: 0 auto; padding: 7rem 1.5rem 4rem; }
+.page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem; }
+.page-title { font-size: 2rem; font-weight: 800; color: var(--primary); }
+.filters { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.filter-btn {
+    padding: 0.45rem 1rem; border: 1.5px solid #dce5e1;
+    border-radius: 999px; font-family: 'Space Grotesk', sans-serif;
+    font-size: 0.82rem; font-weight: 600; cursor: pointer;
+    background: #fff; color: var(--gray); transition: var(--transition);
+}
+.filter-btn.active, .filter-btn:hover { border-color: var(--primary); color: var(--primary); background: rgba(4,85,58,0.06); }
+.frete-card {
+    background: #fff; border-radius: var(--border-radius-lg);
+    border: 1px solid rgba(4,85,58,0.07);
+    box-shadow: var(--shadow); padding: 1.5rem;
+    transition: var(--transition); margin-bottom: 1rem;
+}
+.frete-card:hover { box-shadow: var(--shadow-xl); transform: translateY(-2px); }
+.frete-card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap; }
+.frete-rota { font-size: 1.1rem; font-weight: 800; color: var(--primary); display: flex; align-items: center; gap: 0.5rem; }
+.frete-rota i { color: var(--accent); font-size: 0.9rem; }
+.frete-meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px,1fr)); gap: 0.75rem; padding-top: 1rem; border-top: 1px solid rgba(4,85,58,0.07); }
+.meta-item { display: flex; flex-direction: column; gap: 0.15rem; }
+.meta-label { font-size: 0.72rem; color: var(--gray); text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600; }
+.meta-value { font-size: 0.9rem; font-weight: 700; color: var(--primary); }
+.frete-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(4,85,58,0.07); }
+.empty-state { text-align: center; padding: 5rem 2rem; color: var(--gray); }
+.empty-state i { font-size: 3.5rem; color: #d1d5db; margin-bottom: 1rem; display: block; }
+.empty-state h3 { font-size: 1.2rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--primary); }
+.empty-state p { font-family: 'DM Sans', sans-serif; }
+#loadingMsg { text-align: center; padding: 3rem; color: var(--gray); font-family: 'DM Sans', sans-serif; }
+
+/* modal avaliação */
+.stars-input { display: flex; gap: 0.4rem; margin-bottom: 1rem; }
+.star-btn { font-size: 2rem; background: none; border: none; cursor: pointer; color: #d1d5db; transition: color 0.15s; }
+.star-btn.active, .star-btn:hover { color: #f59e0b; }
+</style>
+</head>
+<body>
+<div id="navbar"></div>
+
+<div class="page-wrap">
+  <div class="page-header">
+    <h1 class="page-title animate-fade-in">Meus Fretes</h1>
+    <div class="filters animate-fade-in" id="statusFilters">
+      <button class="filter-btn active" onclick="setFiltro('')">Todos</button>
+      <button class="filter-btn" onclick="setFiltro('PENDENTE')">Pendente</button>
+      <button class="filter-btn" onclick="setFiltro('ACEITO')">Aceito</button>
+      <button class="filter-btn" onclick="setFiltro('AGENDADO')">Agendado</button>
+      <button class="filter-btn" onclick="setFiltro('EM_TRANSITO')">Em Trânsito</button>
+      <button class="filter-btn" onclick="setFiltro('CONCLUIDO')">Concluído</button>
+      <button class="filter-btn" onclick="setFiltro('CANCELADO')">Cancelado</button>
+    </div>
+  </div>
+
+  <div id="alertBox"></div>
+  <div id="loadingMsg"><span class="spinner"></span> Carregando fretes...</div>
+  <div id="fretesList"></div>
+</div>
+
+<!-- Modal Avaliação -->
+<div class="modal-overlay" id="modalAvaliacao" style="display:none;">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h2><i class="fas fa-star" style="color:#f59e0b"></i> Avaliar Frete</h2>
+      <button class="modal-close" onclick="closeModal('modalAvaliacao')">×</button>
+    </div>
+    <div id="avaliacaoFreteInfo" style="margin-bottom:1rem;padding:0.75rem;background:#f9fbfa;border-radius:12px;font-size:0.9rem;color:var(--primary);"></div>
+    <div class="stars-input" id="starsInput">
+      <button class="star-btn" type="button" onclick="setNota(1)">★</button>
+      <button class="star-btn" type="button" onclick="setNota(2)">★</button>
+      <button class="star-btn" type="button" onclick="setNota(3)">★</button>
+      <button class="star-btn" type="button" onclick="setNota(4)">★</button>
+      <button class="star-btn" type="button" onclick="setNota(5)">★</button>
+    </div>
+    <div class="form-group">
+      <label>Comentário (opcional)</label>
+      <textarea id="avaliacaoComentario" rows="3" style="width:100%;padding:0.75rem;border:1.5px solid #dce5e1;border-radius:12px;font-family:'Space Grotesk',sans-serif;font-size:0.9rem;outline:none;" placeholder="Conte como foi a experiência..."></textarea>
+    </div>
+    <div id="avaliacaoAlert"></div>
+    <button class="btn btn-accent btn-large" onclick="enviarAvaliacao()" style="width:100%;justify-content:center;margin-top:0.5rem;">
+      <i class="fas fa-paper-plane"></i> Enviar Avaliação
+    </button>
+  </div>
+</div>
+
+<div id="footer"></div>
+<script src="../js/app.js"></script>
+<script>
+let todosFretes = [];
+let filtroAtual = '';
+let avaliacaoFreteId = null;
+let notaSelecionada  = 0;
+
+window.addEventListener('DOMContentLoaded', async () => {
+    if (!Auth.isLoggedIn()) { location.href = 'login.html'; return; }
+    buildNavbar();
+    buildFooter();
+    await carregarFretes();
+});
+
+async function carregarFretes() {
+    const loading = document.getElementById('loadingMsg');
+    const alertBox = document.getElementById('alertBox');
+    loading.style.display = 'block';
+    try {
+        const id   = Auth.getId();
+        const role = Auth.getRole();
+        const endpoint = role === 'CLIENTE'
+            ? `/fretes/cliente/${id}`
+            : `/fretes/transportador/${id}`;
+        todosFretes = await apiFetch(endpoint);
+        renderFretes();
+    } catch (err) {
+        showAlert(alertBox, err.message, 'error');
+    } finally {
+        loading.style.display = 'none';
+    }
+}
+
+function setFiltro(status) {
+    filtroAtual = status;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+    renderFretes();
+}
+
+function renderFretes() {
+    const container = document.getElementById('fretesList');
+    const lista = filtroAtual ? todosFretes.filter(f => f.status === filtroAtual) : todosFretes;
+    const role  = Auth.getRole();
+
+    if (!lista.length) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-inbox"></i>
+                <h3>Nenhum frete encontrado</h3>
+                <p>${filtroAtual ? 'Não há fretes com esse status.' : 'Você ainda não possui fretes.'}</p>
+                ${role === 'CLIENTE' ? '<a href="solicitar-frete.html" class="btn btn-primary" style="margin-top:1.5rem;display:inline-flex;">Solicitar Frete</a>' : ''}
+            </div>`;
+        return;
+    }
+
+    container.innerHTML = lista.map(f => freteCard(f, role)).join('');
+}
+
+function freteCard(f, role) {
+    const acoes = getAcoes(f, role);
+    return `
+        <div class="frete-card animate-fade-in">
+          <div class="frete-card-header">
+            <div>
+              <div class="frete-rota">
+                <i class="fas fa-map-marker-alt"></i> ${f.origem}
+                <i class="fas fa-long-arrow-alt-right"></i>
+                <i class="fas fa-flag-checkered"></i> ${f.destino}
+              </div>
+              <div style="margin-top:0.4rem;font-family:'DM Sans',sans-serif;font-size:0.85rem;color:var(--gray);">
+                ${f.descricaoCarga}
+              </div>
+            </div>
+            ${statusBadge(f.status)}
+          </div>
+          <div class="frete-meta">
+            <div class="meta-item">
+              <span class="meta-label">Valor</span>
+              <span class="meta-value" style="color:var(--accent)">${formatMoney(f.valor)}</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Solicitado em</span>
+              <span class="meta-value">${formatDate(f.dataSolicitacao)}</span>
+            </div>
+            ${f.transportadorNome ? `<div class="meta-item"><span class="meta-label">Transportador</span><span class="meta-value">${f.transportadorNome}</span></div>` : ''}
+            ${f.clienteNome ? `<div class="meta-item"><span class="meta-label">Cliente</span><span class="meta-value">${f.clienteNome}</span></div>` : ''}
+            ${f.dataHoraInicio ? `<div class="meta-item"><span class="meta-label">Início</span><span class="meta-value">${formatDate(f.dataHoraInicio)}</span></div>` : ''}
+            ${f.avaliacaoNota ? `<div class="meta-item"><span class="meta-label">Avaliação</span><span class="meta-value" style="color:#f59e0b;">${'★'.repeat(f.avaliacaoNota)} ${f.avaliacaoNota}/5</span></div>` : ''}
+          </div>
+          ${acoes ? `<div class="frete-actions">${acoes}</div>` : ''}
+        </div>`;
+}
+
+function getAcoes(f, role) {
+    const btns = [];
+    if (role === 'TRANSPORTADOR') {
+        if (f.status === 'PENDENTE')   btns.push(`<button class="btn btn-primary btn-sm" onclick="acao(${f.id},'aceitar')"><i class="fas fa-check"></i> Aceitar</button>`);
+        if (f.status === 'AGENDADO')   btns.push(`<button class="btn btn-primary btn-sm" onclick="acao(${f.id},'confirmar')"><i class="fas fa-calendar-check"></i> Confirmar</button>`);
+        if (f.status === 'ACEITO' || f.status === 'EM_TRANSITO') btns.push(`<button class="btn btn-accent btn-sm" onclick="acao(${f.id},'finalizar')"><i class="fas fa-flag-checkered"></i> Finalizar</button>`);
+        if (f.status === 'AGENDADO')   btns.push(`<button class="btn btn-danger btn-sm" onclick="acao(${f.id},'rejeitar')"><i class="fas fa-times"></i> Rejeitar</button>`);
+    }
+    if (role === 'CLIENTE') {
+        if (f.status === 'CONCLUIDO' && !f.avaliacaoNota)
+            btns.push(`<button class="btn btn-accent btn-sm" onclick="abrirAvaliacao(${f.id},'${f.origem} → ${f.destino}')"><i class="fas fa-star"></i> Avaliar</button>`);
+    }
+    if (['PENDENTE','ACEITO','AGENDADO'].includes(f.status))
+        btns.push(`<button class="btn btn-secondary btn-sm" onclick="acao(${f.id},'cancelar')"><i class="fas fa-ban"></i> Cancelar</button>`);
+    return btns.join('');
+}
+
+async function acao(id, tipo) {
+    const alertBox = document.getElementById('alertBox');
+    const msgs = {
+        aceitar:  'Frete aceito com sucesso!',
+        confirmar:'Frete agendado confirmado!',
+        finalizar:'Frete finalizado com sucesso!',
+        rejeitar: 'Frete rejeitado.',
+        cancelar: 'Frete cancelado.'
+    };
+    try {
+        await apiFetch(`/fretes/${id}/${tipo}`, { method: 'POST' });
+        showAlert(alertBox, msgs[tipo] || 'Ação realizada.', 'success');
+        await carregarFretes();
+    } catch (err) {
+        showAlert(alertBox, err.message, 'error');
+    }
+}
+
+// ── AVALIAÇÃO ──
+function abrirAvaliacao(freteId, rota) {
+    avaliacaoFreteId = freteId;
+    notaSelecionada  = 0;
+    document.getElementById('avaliacaoFreteInfo').textContent = rota;
+    document.getElementById('avaliacaoComentario').value = '';
+    document.querySelectorAll('.star-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('avaliacaoAlert').innerHTML = '';
+    openModal('modalAvaliacao');
+}
+
+function setNota(n) {
+    notaSelecionada = n;
+    document.querySelectorAll('.star-btn').forEach((b, i) => b.classList.toggle('active', i < n));
+}
+
+async function enviarAvaliacao() {
+    const alertEl = document.getElementById('avaliacaoAlert');
+    if (!notaSelecionada) return showAlert(alertEl, 'Selecione uma nota.', 'error');
+    const comentario = document.getElementById('avaliacaoComentario').value.trim();
+    try {
+        // A API de avaliação usa o endpoint /fretes/{id} com um patch ou POST - adaptamos para o AvaliacaoRequest do Spring
+        await apiFetch(`/fretes/${avaliacaoFreteId}/avaliar`, {
+            method: 'POST',
+            body: JSON.stringify({ nota: notaSelecionada, comentario })
+        });
+        closeModal('modalAvaliacao');
+        showAlert(document.getElementById('alertBox'), 'Avaliação enviada com sucesso!', 'success');
+        await carregarFretes();
+    } catch (err) {
+        showAlert(alertEl, err.message, 'error');
+    }
+}
+</script>
+</body>
+</html>
