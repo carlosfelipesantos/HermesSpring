@@ -203,6 +203,11 @@ public class FreteService {
                 .collect(Collectors.toList());
     }
 
+    public Frete buscarFreteEntityPublic(Long id) {
+        return freteRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Frete não encontrado"));
+    }
+
     // ========== MÉTODOS PRIVADOS ==========
 
     private Frete buscarFreteEntity(Long id) {

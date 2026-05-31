@@ -175,6 +175,7 @@ function togglePass() {
 async function doLogin(e) {
     e.preventDefault();
     const email = document.getElementById('email').value.trim();
+    const senha = document.getElementById('senha').value;
     const btn   = document.getElementById('loginBtn');
     const alert = document.getElementById('alertBox');
 
@@ -182,16 +183,17 @@ async function doLogin(e) {
     document.getElementById('loginBtnText').textContent = 'Entrando...';
 
     try {
-        // Busca o usuário pelo email e role
-        const endpoint = tipoSelecionado === 'CLIENTE' ? '/clientes' : '/transportadores';
-        const lista = await apiFetch(endpoint);
-        const user  = lista.find(u => u.email === email);
+        const endpoint = tipoSelecionado === 'CLIENTE'
+            ? '/auth/cliente/login'
+            : '/auth/transportador/login';
 
-        if (!user) throw new Error('E-mail não encontrado para o tipo selecionado.');
+        const user = await apiFetch(endpoint, {
+            method: 'POST',
+            body: JSON.stringify({ email, senha })
+        });
 
-        // Salva sessão
-        Auth.save({ id: user.id, nome: user.nome, email: user.email, role: tipoSelecionado });
-        location.href = tipoSelecionado === 'CLIENTE' ? 'solicitar-frete.html' : 'fretes-disponiveis.html';
+        Auth.save({ id: user.id, nome: user.nome, email: user.email, role: user.role });
+        location.href = user.role === 'CLIENTE' ? 'solicitar-frete.html' : 'fretes-disponiveis.html';
 
     } catch (err) {
         showAlert(alert, err.message, 'error');

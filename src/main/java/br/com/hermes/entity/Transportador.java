@@ -29,11 +29,31 @@ public class Transportador {
     @Column(name = "avaliacao_media")
     private Double avaliacaoMedia;
 
+    @Column(nullable = false)
+    private String senha;
+
+    public String getSenha() { return senha; }
+    public void setSenha(String senha) { this.senha = senha; }
+
     @Column(name = "total_avaliacoes")
     private Integer totalAvaliacoes = 0;
 
     @OneToMany(mappedBy = "transportador", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Frete> fretesAceitos = new ArrayList<>();
+
+    // Dentro da classe Transportador, adicionar:
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "transportador_categoria",
+            joinColumns = @JoinColumn(name = "transportador_id"),
+            inverseJoinColumns = @JoinColumn(name = "categoria_id")
+    )
+    private List<CategoriaCarga> categoriasCarga = new ArrayList<>();
+
+    // getter e setter
+    public List<CategoriaCarga> getCategoriasCarga() { return categoriasCarga; }
+    public void setCategoriasCarga(List<CategoriaCarga> categoriasCarga) { this.categoriasCarga = categoriasCarga; }
 
     public Long getId() {
         return id;

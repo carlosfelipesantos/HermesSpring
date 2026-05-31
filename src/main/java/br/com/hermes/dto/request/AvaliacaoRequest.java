@@ -20,6 +20,12 @@ public class AvaliacaoRequest {
     public @NotNull(message = "Nota é obrigatória") @DecimalMin(value = "0.0", message = "Nota mínima é 0") @DecimalMax(value = "5.0", message = "Nota máxima é 5") Double getNota() {
         return nota;
     }
+    @NotNull(message = "ID do frete é obrigatório")
+    private Long freteId;
+
+    public Long getFreteId() { return freteId; }
+    public void setFreteId(Long freteId) { this.freteId = freteId; }
+
 
     public void setNota(@NotNull(message = "Nota é obrigatória") @DecimalMin(value = "0.0", message = "Nota mínima é 0") @DecimalMax(value = "5.0", message = "Nota máxima é 5") Double nota) {
         this.nota = nota;

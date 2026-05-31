@@ -115,7 +115,10 @@ body {
         <input type="text" id="telefone" placeholder=" " oninput="mascaraTel(this)">
         <label><i class="fas fa-phone"></i> Telefone</label>
       </div>
-
+        <div class="form-floating">
+            <input type="password" id="senha" placeholder=" " required minlength="6">
+            <label><i class="fas fa-lock"></i> Senha</label>
+        </div>
       <button type="submit" class="btn-cadastro" id="cadastroBtn">
         <span id="cadastroBtnText">Cadastrar</span>
         <i class="fas fa-user-plus"></i>
@@ -155,8 +158,10 @@ async function doCadastro(e) {
     const nome     = document.getElementById('nome').value.trim();
     const email    = document.getElementById('email').value.trim();
     const telefone = document.getElementById('telefone').value.trim();
+    const senha    = document.getElementById('senha').value;
 
-    if (!nome || !email) return showAlert(alertBox, 'Nome e e-mail são obrigatórios.', 'error');
+    if (!nome || !email || !senha) return showAlert(alertBox, 'Nome, e-mail e senha são obrigatórios.', 'error');
+    if (senha.length < 6) return showAlert(alertBox, 'A senha deve ter pelo menos 6 caracteres.', 'error');
 
     btn.disabled = true;
     document.getElementById('cadastroBtnText').textContent = 'Cadastrando...';
@@ -165,12 +170,11 @@ async function doCadastro(e) {
         const endpoint = tipoSelecionado === 'CLIENTE' ? '/clientes' : '/transportadores';
         const user = await apiFetch(endpoint, {
             method: 'POST',
-            body: JSON.stringify({ nome, email, telefone })
+            body: JSON.stringify({ nome, email, telefone, senha })
         });
 
         Auth.save({ id: user.id, nome: user.nome, email: user.email, role: tipoSelecionado });
         showAlert(alertBox, 'Cadastro realizado com sucesso! Redirecionando...', 'success');
-
         setTimeout(() => {
             location.href = tipoSelecionado === 'CLIENTE' ? 'solicitar-frete.html' : 'fretes-disponiveis.html';
         }, 1200);

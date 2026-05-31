@@ -24,6 +24,12 @@ public class Cliente {
     @Column(nullable = false, unique = true)
     private String email;
 
+    @Column(nullable = false)
+    private String senha;
+
+    public String getSenha() { return senha; }
+    public void setSenha(String senha) { this.senha = senha; }
+
     private String telefone;
 
     @OneToMany(mappedBy = "cliente", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
