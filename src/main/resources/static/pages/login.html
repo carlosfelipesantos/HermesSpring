@@ -202,10 +202,12 @@ async function doLogin(e) {
     }
 }
 
-// Se já logado, redireciona
+// Se já logado com dados válidos, redireciona
 if (Auth.isLoggedIn()) {
     const role = Auth.getRole();
-    location.href = role === 'CLIENTE' ? 'solicitar-frete.html' : 'fretes-disponiveis.html';
+    if (role === 'CLIENTE') location.href = 'solicitar-frete.html';
+    else if (role === 'TRANSPORTADOR') location.href = 'fretes-disponiveis.html';
+    else Auth.clear(); // role inválido: limpa e deixa fazer login
 }
 </script>
 </body>

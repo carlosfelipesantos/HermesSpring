@@ -4,7 +4,11 @@ const API_BASE = '/api';
 // ── AUTH ─────────────────────────────────────────────────
 const Auth = {
     get() {
-        try { return JSON.parse(localStorage.getItem('hermes_user') || 'null'); } catch { return null; }
+        try {
+            const user = JSON.parse(localStorage.getItem('hermes_user') || 'null');
+            if (!user || !user.id || !user.role) return null;
+            return user;
+        } catch { return null; }
     },
     save(user) { localStorage.setItem('hermes_user', JSON.stringify(user)); },
     clear()    { localStorage.removeItem('hermes_user'); },
@@ -27,10 +31,10 @@ async function apiFetch(path, options = {}) {
         try { const j = await res.json(); msg = j.message || j.error || msg; } catch {}
         throw new Error(msg);
     }
-    if (res.status === 204) return null;
-    return res.json();
+    const text = await res.text();
+    if (!text) return null;
+    try { return JSON.parse(text); } catch { return null; }
 }
-
 // ── STATUS BADGE ─────────────────────────────────────────
 function statusBadge(status) {
     const labels = {

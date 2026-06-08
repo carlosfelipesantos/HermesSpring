@@ -244,10 +244,9 @@ async function enviarAvaliacao() {
     if (!notaSelecionada) return showAlert(alertEl, 'Selecione uma nota.', 'error');
     const comentario = document.getElementById('avaliacaoComentario').value.trim();
     try {
-        // A API de avaliação usa o endpoint /fretes/{id} com um patch ou POST - adaptamos para o AvaliacaoRequest do Spring
-        await apiFetch(`/fretes/${avaliacaoFreteId}/avaliar`, {
+        await apiFetch(`/avaliacoes`, {
             method: 'POST',
-            body: JSON.stringify({ nota: notaSelecionada, comentario })
+            body: JSON.stringify({ freteId: avaliacaoFreteId, nota: notaSelecionada, comentario })
         });
         closeModal('modalAvaliacao');
         showAlert(document.getElementById('alertBox'), 'Avaliação enviada com sucesso!', 'success');
