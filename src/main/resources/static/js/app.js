@@ -89,13 +89,14 @@ document.addEventListener('click', e => {
 // ── NAVBAR ───────────────────────────────────────────────
 function buildNavbar(activePage) {
     const user = Auth.get();
+    const root = location.pathname.includes('/pages/') ? '../' : '';
     const pages = {
-        home: 'index.html',
-        clientes: 'pages/clientes.html',
-        transportadores: 'pages/transportadores.html',
-        fretes: 'pages/fretes.html',
-        solicitar: 'pages/solicitar-frete.html',
-        disponiveis: 'pages/fretes-disponiveis.html',
+        home: `${root}index.html`,
+        clientes: `${root}pages/clientes.html`,
+        transportadores: `${root}pages/transportadores.html`,
+        fretes: `${root}pages/fretes.html`,
+        solicitar: `${root}pages/solicitar-frete.html`,
+        disponiveis: `${root}pages/fretes-disponiveis.html`,
     };
 
     const authHtml = user
@@ -127,8 +128,6 @@ function buildNavbar(activePage) {
            <a href="${pages.fretes}"      class="nav-link">Meus Fretes</a>`
         : `<a href="index.html#features"  class="nav-link">Como funciona</a>
            <a href="index.html#features"  class="nav-link">Vantagens</a>`;
-
-    const root = location.pathname.includes('/pages/') ? '../' : '';
 
     document.getElementById('navbar').innerHTML = `
         <nav class="navbar">

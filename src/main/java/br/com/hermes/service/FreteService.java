@@ -2,6 +2,7 @@ package br.com.hermes.service;
 
 import br.com.hermes.dto.request.CriarFreteAgendadoRequest;
 import br.com.hermes.dto.request.CriarFreteImediatoRequest;
+import br.com.hermes.dto.request.EditarFreteRequest;
 import br.com.hermes.dto.response.FreteResponse;
 import br.com.hermes.entity.*;
 import br.com.hermes.exception.BusinessException;
@@ -130,6 +131,28 @@ public class FreteService {
         freteRepository.save(frete);
     }
 
+    // ========== EDIÇÃO PELO CLIENTE ==========
+
+    @Transactional
+    public FreteResponse editarFrete(Long freteId, Long clienteId, EditarFreteRequest request) {
+        Frete frete = buscarFreteEntity(freteId);
+
+        if (!frete.getCliente().getId().equals(clienteId)) {
+            throw new BusinessException("Você não é o cliente dono deste frete");
+        }
+        if (frete.getStatus() != StatusFrete.PENDENTE) {
+            throw new BusinessException("O frete só pode ser editado enquanto estiver com status PENDENTE");
+        }
+
+        frete.setOrigem(request.getOrigem());
+        frete.setDestino(request.getDestino());
+        frete.setDescricaoCarga(request.getDescricaoCarga());
+        frete.setValor(request.getValor());
+
+        freteRepository.save(frete);
+        return toResponse(frete);
+    }
+
     // ========== FLUXOS ALTERNATIVOS ==========
 
     @Transactional
@@ -182,7 +205,6 @@ public class FreteService {
 
     @Transactional(readOnly = true)
     public List<FreteResponse> listarPorCliente(Long clienteId) {
-        clienteService.buscarPorId(clienteId);
         return freteRepository.findByClienteId(clienteId).stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
@@ -190,7 +212,6 @@ public class FreteService {
 
     @Transactional(readOnly = true)
     public List<FreteResponse> listarPorTransportador(Long transportadorId) {
-        transportadorService.buscarPorId(transportadorId);
         return freteRepository.findByTransportadorId(transportadorId).stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
