@@ -182,7 +182,6 @@ public class FreteService {
 
     @Transactional(readOnly = true)
     public List<FreteResponse> listarPorCliente(Long clienteId) {
-        clienteService.buscarPorId(clienteId);
         return freteRepository.findByClienteId(clienteId).stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
@@ -190,7 +189,6 @@ public class FreteService {
 
     @Transactional(readOnly = true)
     public List<FreteResponse> listarPorTransportador(Long transportadorId) {
-        transportadorService.buscarPorId(transportadorId);
         return freteRepository.findByTransportadorId(transportadorId).stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
