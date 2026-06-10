@@ -18,7 +18,7 @@ public class CategoriaCarga {
     private String descricao;
 
     // Lado N:N
-    @ManyToMany(mappedBy = "categoriasCarga")
+    @ManyToMany(mappedBy = "categoriasCarga", fetch = FetchType.EAGER)
     private List<Transportador> transportadores = new ArrayList<>();
 
     // getters e setters...

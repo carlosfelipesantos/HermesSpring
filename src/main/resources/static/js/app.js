@@ -97,6 +97,7 @@ function buildNavbar(activePage) {
         fretes: `${root}pages/fretes.html`,
         solicitar: `${root}pages/solicitar-frete.html`,
         disponiveis: `${root}pages/fretes-disponiveis.html`,
+        categorias: `${root}pages/categorias.html`,
     };
 
     const authHtml = user
@@ -122,12 +123,13 @@ function buildNavbar(activePage) {
 
     const navLinks = user?.role === 'CLIENTE'
         ? `<a href="${pages.solicitar}" class="nav-link">Solicitar Frete</a>
-           <a href="${pages.fretes}"   class="nav-link">Meus Fretes</a>`
+       <a href="${pages.fretes}" class="nav-link">Meus Fretes</a>`
         : user?.role === 'TRANSPORTADOR'
-        ? `<a href="${pages.disponiveis}" class="nav-link">Fretes Disponíveis</a>
-           <a href="${pages.fretes}"      class="nav-link">Meus Fretes</a>`
-        : `<a href="index.html#features"  class="nav-link">Como funciona</a>
-           <a href="index.html#features"  class="nav-link">Vantagens</a>`;
+            ? `<a href="${pages.disponiveis}" class="nav-link">Fretes Disponíveis</a>
+       <a href="${pages.fretes}" class="nav-link">Meus Fretes</a>
+       <a href="${pages.categorias}" class="nav-link">Categorias</a>`
+            : `<a href="index.html#features" class="nav-link">Como funciona</a>
+       <a href="index.html#features" class="nav-link">Vantagens</a>`;
 
     document.getElementById('navbar').innerHTML = `
         <nav class="navbar">
