@@ -2,6 +2,7 @@ package br.com.hermes.controller;
 
 import br.com.hermes.dto.request.CriarFreteAgendadoRequest;
 import br.com.hermes.dto.request.CriarFreteImediatoRequest;
+import br.com.hermes.dto.request.EditarFreteRequest;
 import br.com.hermes.dto.response.FreteResponse;
 import br.com.hermes.entity.Frete;
 import br.com.hermes.service.FreteService;
@@ -22,6 +23,16 @@ public class FreteController {
     }
 
     // ========== FLUXOS NORMAIS ==========
+
+    // Editar frete (cliente — somente status PENDENTE)
+    @PutMapping("/{id}")
+    public ResponseEntity<FreteResponse> editarFrete(
+            @PathVariable Long id,
+            @Valid @RequestBody EditarFreteRequest request,
+            @RequestHeader("usuarioId") Long clienteId) {
+        FreteResponse response = freteService.editarFrete(id, clienteId, request);
+        return ResponseEntity.ok(response);
+    }
 
     // Criar frete imediato (qualquer transportador pode aceitar)
     @PostMapping("/imediato")
