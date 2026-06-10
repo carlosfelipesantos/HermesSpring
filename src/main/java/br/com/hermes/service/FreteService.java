@@ -21,7 +21,7 @@ public class FreteService {
     private final ClienteService clienteService;
     private final TransportadorService transportadorService;
 
-    // ✅ Construtor explícito (SEM Lombok, SEM ModelMapper)
+
     public FreteService(FreteRepository freteRepository,
                         ClienteService clienteService,
                         TransportadorService transportadorService) {

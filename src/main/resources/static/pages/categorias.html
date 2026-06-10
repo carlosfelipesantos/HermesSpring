@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hermes – Categorias de Carga</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        .page-wrap { max-width: 1100px; margin: 0 auto; padding: 7rem 1.5rem 4rem; }
+        .page-header {
+            display: flex; align-items: flex-start; justify-content: space-between;
+            margin-bottom: 2.5rem; flex-wrap: wrap; gap: 1rem;
+        }
+        .page-title { font-size: 2rem; font-weight: 800; color: var(--primary); margin-bottom: 0.25rem; }
+        .page-sub { font-family: 'DM Sans', sans-serif; color: var(--gray); font-size: 0.95rem; }
+
+        /* ── GRID DE CATEGORIAS ── */
+        .categorias-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 3rem;
+        }
+        .categoria-card {
+            background: #fff;
+            border-radius: var(--border-radius-lg);
+            border: 1px solid rgba(4,85,58,0.08);
+            box-shadow: var(--shadow);
+            padding: 1.5rem;
+            transition: var(--transition);
+            display: flex; flex-direction: column; gap: 0.75rem;
+        }
+        .categoria-card:hover { box-shadow: var(--shadow-xl); transform: translateY(-3px); }
+        .categoria-nome {
+            font-size: 1.05rem; font-weight: 800; color: var(--primary);
+            display: flex; align-items: center; gap: 0.5rem;
+        }
+        .categoria-icon {
+            width: 36px; height: 36px; border-radius: 10px;
+            background: rgba(4,85,58,0.08);
+            display: flex; align-items: center; justify-content: center;
+            color: var(--primary); font-size: 1rem; flex-shrink: 0;
+        }
+        .categoria-descricao {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.88rem; color: var(--gray); line-height: 1.5;
+            min-height: 2.5rem;
+        }
+        .categoria-footer {
+            display: flex; align-items: center; justify-content: space-between;
+            padding-top: 0.75rem;
+            border-top: 1px solid rgba(4,85,58,0.07);
+            gap: 0.5rem; flex-wrap: wrap;
+        }
+        .categoria-transportadores {
+            font-size: 0.78rem; font-family: 'DM Sans', sans-serif;
+            color: var(--gray); display: flex; align-items: center; gap: 0.3rem;
+        }
+        .btn-associar {
+            background: rgba(4,85,58,0.08); color: var(--primary);
+            border: none; border-radius: 8px;
+            padding: 0.4rem 0.85rem;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.8rem; font-weight: 700;
+            cursor: pointer; transition: var(--transition);
+            display: flex; align-items: center; gap: 0.3rem;
+        }
+        .btn-associar:hover { background: var(--primary); color: #fff; }
+
+        /* ── EMPTY STATE ── */
+        .empty-state {
+            text-align: center; padding: 4rem 2rem; color: var(--gray);
+            grid-column: 1 / -1;
+        }
+        .empty-state i { font-size: 3rem; color: #d1d5db; margin-bottom: 1rem; display: block; }
+        .empty-state h3 { font-size: 1.1rem; font-weight: 700; color: var(--primary); margin-bottom: 0.4rem; }
+        .empty-state p { font-family: 'DM Sans', sans-serif; font-size: 0.9rem; }
+
+        /* ── FORMULÁRIO NOVA CATEGORIA ── */
+        .section-title {
+            font-size: 1.1rem; font-weight: 800; color: var(--primary);
+            margin-bottom: 1.25rem;
+            display: flex; align-items: center; gap: 0.5rem;
+            padding-bottom: 0.6rem;
+            border-bottom: 2px solid rgba(4,85,58,0.1);
+        }
+        .form-card {
+            background: #fff;
+            border-radius: var(--border-radius-xl);
+            box-shadow: var(--shadow-xl);
+            padding: 2rem;
+            margin-bottom: 3rem;
+        }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        @media (max-width: 640px) { .form-row { grid-template-columns: 1fr; } }
+
+        /* ── MODAL ASSOCIAR ── */
+        .transportador-select-list {
+            display: flex; flex-direction: column; gap: 0.6rem;
+            max-height: 320px; overflow-y: auto;
+            padding-right: 4px;
+        }
+        .transportador-select-list::-webkit-scrollbar { width: 4px; }
+        .transportador-select-list::-webkit-scrollbar-track { background: #f0f0f0; border-radius: 4px; }
+        .transportador-select-list::-webkit-scrollbar-thumb { background: rgba(4,85,58,0.3); border-radius: 4px; }
+
+        .transportador-opt {
+            padding: 0.9rem 1rem;
+            border: 2px solid #e5e7eb; border-radius: 12px;
+            cursor: pointer; transition: var(--transition);
+            display: flex; align-items: center; gap: 0.75rem;
+            background: #fff;
+        }
+        .transportador-opt:hover, .transportador-opt.selected {
+            border-color: var(--primary);
+            background: rgba(4,85,58,0.04);
+        }
+        .transportador-opt input[type=radio] { accent-color: var(--primary); width: 16px; height: 16px; flex-shrink: 0; }
+        .transportador-opt-nome { font-weight: 700; color: var(--primary); font-size: 0.9rem; }
+        .transportador-opt-info { font-size: 0.78rem; font-family: 'DM Sans', sans-serif; color: var(--gray); margin-top: 0.15rem; }
+        .stars { color: #f59e0b; }
+
+        #alertBox { margin-bottom: 1.25rem; }
+        #modalAlert { margin-top: 0.75rem; }
+
+        .spinner-inline {
+            display: inline-block; width: 14px; height: 14px;
+            border: 2px solid rgba(255,255,255,0.4);
+            border-top-color: #fff; border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+<div id="navbar"></div>
+
+<div class="page-wrap">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title animate-fade-in">Categorias de Carga</h1>
+            <p class="page-sub animate-fade-in">Gerencie os tipos de carga e associe transportadores.</p>
+        </div>
+    </div>
+
+    <div id="alertBox"></div>
+
+    <!-- ── NOVA CATEGORIA ── -->
+    <div class="form-card animate-fade-in">
+        <h3 class="section-title"><i class="fas fa-plus-circle"></i> Nova Categoria</h3>
+        <form id="formCategoria" onsubmit="criarCategoria(event)">
+            <div class="form-row" style="margin-bottom: 1rem;">
+                <div class="form-group">
+                    <label>Nome da Categoria *</label>
+                    <input type="text" id="nomeCategoria" placeholder="Ex: Refrigerado, Frágil, Perigoso" required>
+                </div>
+                <div class="form-group">
+                    <label>Descrição</label>
+                    <input type="text" id="descricaoCategoria" placeholder="Ex: Cargas que necessitam de refrigeração">
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary" id="btnCriar">
+                <i class="fas fa-plus"></i>
+                <span id="btnCriarText">Criar Categoria</span>
+            </button>
+        </form>
+    </div>
+
+    <!-- ── LISTA DE CATEGORIAS ── -->
+    <h3 class="section-title animate-fade-in"><i class="fas fa-tags"></i> Categorias Cadastradas</h3>
+    <div class="categorias-grid" id="categoriasGrid">
+        <div class="empty-state">
+            <span class="spinner"></span>
+            <p style="margin-top:1rem;">Carregando categorias...</p>
+        </div>
+    </div>
+</div>
+
+<!-- ── MODAL ASSOCIAR TRANSPORTADOR ── -->
+<div class="modal-overlay" id="modalAssociar" style="display:none;">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h2><i class="fas fa-truck" style="color:var(--accent)"></i> Associar Transportador</h2>
+            <button class="modal-close" onclick="closeModal('modalAssociar')">×</button>
+        </div>
+        <p style="font-family:'DM Sans',sans-serif;font-size:0.9rem;color:var(--gray);margin-bottom:1.25rem;">
+            Categoria: <strong id="modalCategoriaNome" style="color:var(--primary)"></strong>
+        </p>
+        <div id="transportadoresSelectList" class="transportador-select-list">
+            <p style="color:var(--gray);font-family:'DM Sans',sans-serif;font-size:0.9rem;">Carregando...</p>
+        </div>
+        <div id="modalAlert"></div>
+        <button class="btn btn-primary btn-large" onclick="confirmarAssociacao()" style="width:100%;justify-content:center;margin-top:1.25rem;border-radius:14px;">
+            <i class="fas fa-link"></i>
+            <span id="btnAssociarText">Associar</span>
+        </button>
+    </div>
+</div>
+
+<div id="footer"></div>
+<script src="../js/app.js"></script>
+<script>
+    let categoriaIdSelecionada = null;
+    let transportadorSelecionado = null;
+
+    // ── ÍCONES POR NOME DE CATEGORIA ──
+    const iconeCategoria = (nome = '') => {
+        const n = nome.toLowerCase();
+        if (n.includes('refrig') || n.includes('frio'))   return 'fa-snowflake';
+        if (n.includes('frág') || n.includes('fragil'))   return 'fa-wine-glass-alt';
+        if (n.includes('perig') || n.includes('químic'))  return 'fa-biohazard';
+        if (n.includes('vivo') || n.includes('animal'))   return 'fa-paw';
+        if (n.includes('granel'))                         return 'fa-layer-group';
+        if (n.includes('document') || n.includes('papel'))return 'fa-file-alt';
+        if (n.includes('eletr'))                          return 'fa-microchip';
+        return 'fa-box';
+    };
+
+    window.addEventListener('DOMContentLoaded', () => {
+        buildNavbar();
+        buildFooter();
+        carregarCategorias();
+    });
+
+    // ── CARREGAR CATEGORIAS ──
+    async function carregarCategorias() {
+        const grid = document.getElementById('categoriasGrid');
+        try {
+            const lista = await apiFetch('/categorias');
+            if (!lista || !lista.length) {
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-tags"></i>
+                        <h3>Nenhuma categoria ainda</h3>
+                        <p>Crie a primeira categoria usando o formulário acima.</p>
+                    </div>`;
+                return;
+            }
+            grid.innerHTML = lista.map(c => cardCategoria(c)).join('');
+        } catch (err) {
+            grid.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-exclamation-circle" style="color:var(--error)"></i>
+                    <h3>Erro ao carregar</h3>
+                    <p>${err.message}</p>
+                </div>`;
+        }
+    }
+
+    function cardCategoria(c) {
+        const icone = iconeCategoria(c.nome);
+        const qtd   = c.transportadores ? c.transportadores.length : 0;
+        return `
+            <div class="categoria-card animate-fade-in">
+                <div class="categoria-nome">
+                    <div class="categoria-icon"><i class="fas ${icone}"></i></div>
+                    ${c.nome}
+                </div>
+                <div class="categoria-descricao">
+                    ${c.descricao || '<span style="opacity:0.5;font-style:italic;">Sem descrição</span>'}
+                </div>
+                <div class="categoria-footer">
+                    <span class="categoria-transportadores">
+                        <i class="fas fa-truck"></i>
+                        ${qtd} transportador${qtd !== 1 ? 'es' : ''}
+                    </span>
+                    <button class="btn-associar" onclick="abrirModalAssociar(${c.id}, '${escapeHtml(c.nome)}')">
+                        <i class="fas fa-link"></i> Associar
+                    </button>
+                </div>
+            </div>`;
+    }
+
+    // ── CRIAR CATEGORIA ──
+    async function criarCategoria(e) {
+        e.preventDefault();
+        const alertBox  = document.getElementById('alertBox');
+        const btn       = document.getElementById('btnCriar');
+        const btnText   = document.getElementById('btnCriarText');
+        const nome      = document.getElementById('nomeCategoria').value.trim();
+        const descricao = document.getElementById('descricaoCategoria').value.trim();
+
+        if (!nome) return showAlert(alertBox, 'O nome da categoria é obrigatório.', 'error');
+
+        btn.disabled = true;
+        btnText.innerHTML = '<span class="spinner-inline"></span> Criando...';
+
+        try {
+            await apiFetch('/categorias', {
+                method: 'POST',
+                body: JSON.stringify({ nome, descricao })
+            });
+            showAlert(alertBox, `Categoria "${nome}" criada com sucesso!`, 'success');
+            document.getElementById('formCategoria').reset();
+            await carregarCategorias();
+        } catch (err) {
+            showAlert(alertBox, err.message, 'error');
+        } finally {
+            btn.disabled = false;
+            btnText.innerHTML = '<i class="fas fa-plus"></i> Criar Categoria';
+        }
+    }
+
+    // ── MODAL ASSOCIAR ──
+    async function abrirModalAssociar(categoriaId, categoriaNome) {
+        categoriaIdSelecionada = categoriaId;
+        transportadorSelecionado = null;
+
+        document.getElementById('modalCategoriaNome').textContent = categoriaNome;
+        document.getElementById('modalAlert').innerHTML = '';
+        document.getElementById('btnAssociarText').textContent = 'Associar';
+
+        const lista = document.getElementById('transportadoresSelectList');
+        lista.innerHTML = '<p style="color:var(--gray);font-family:\'DM Sans\',sans-serif;">Carregando transportadores...</p>';
+        openModal('modalAssociar');
+
+        try {
+            const transportadores = await apiFetch('/transportadores');
+            if (!transportadores || !transportadores.length) {
+                lista.innerHTML = '<p style="color:var(--gray);font-family:\'DM Sans\',sans-serif;">Nenhum transportador cadastrado.</p>';
+                return;
+            }
+            lista.innerHTML = transportadores.map(t => `
+                <label class="transportador-opt" onclick="selecionarTransportador(${t.id}, this)">
+                    <input type="radio" name="trans_modal" value="${t.id}">
+                    <div style="flex:1;">
+                        <div class="transportador-opt-nome">${t.nome}</div>
+                        <div class="transportador-opt-info">
+                            <span class="stars">${'★'.repeat(Math.round(t.avaliacaoMedia || 0))}${'☆'.repeat(5 - Math.round(t.avaliacaoMedia || 0))}</span>
+                            ${t.avaliacaoMedia ? t.avaliacaoMedia.toFixed(1) + ' · ' + t.totalAvaliacoes + ' avaliações' : 'Sem avaliações'}
+                            · ${t.email}
+                        </div>
+                    </div>
+                </label>`).join('');
+        } catch (err) {
+            lista.innerHTML = `<p style="color:var(--error);font-family:'DM Sans',sans-serif;">${err.message}</p>`;
+        }
+    }
+
+    function selecionarTransportador(id, el) {
+        transportadorSelecionado = id;
+        document.querySelectorAll('.transportador-opt').forEach(o => o.classList.remove('selected'));
+        el.classList.add('selected');
+    }
+
+    async function confirmarAssociacao() {
+        const alertEl  = document.getElementById('modalAlert');
+        const btnText  = document.getElementById('btnAssociarText');
+
+        if (!transportadorSelecionado)
+            return showAlert(alertEl, 'Selecione um transportador.', 'error');
+
+        btnText.innerHTML = '<span class="spinner-inline"></span> Associando...';
+
+        try {
+            await apiFetch(`/categorias/${categoriaIdSelecionada}/transportadores/${transportadorSelecionado}`, {
+                method: 'POST'
+            });
+            closeModal('modalAssociar');
+            showAlert(document.getElementById('alertBox'), 'Transportador associado com sucesso!', 'success');
+            await carregarCategorias();
+        } catch (err) {
+            showAlert(alertEl, err.message, 'error');
+        } finally {
+            btnText.textContent = 'Associar';
+        }
+    }
+
+    // ── UTILITÁRIO ──
+    function escapeHtml(str) {
+        return str.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    }
+</script>
+</body>
+</html>
